@@ -1,0 +1,163 @@
+# Brain-Inspired AI Configuration
+# 类脑人工智能配置文件
+
+project:
+  name: "Brain-Inspired AI"
+  version: "1.0.0"
+  description: "High-refresh-rate brain-inspired computing system with online STDP learning"
+
+# Model Configuration
+model:
+  base_model: "Qwen/Qwen3.5-0.8B"  # Qwen3.5最新模型
+  world_model: "openai/clip-vit-base-patch32"
+  
+  # Spiking Neural Network Parameters
+  snn:
+    neuron_type: "LIF"  # Leaky Integrate-and-Fire
+    tau_mem: 20.0       # Membrane time constant (ms)
+    tau_syn: 5.0        # Synaptic time constant (ms)
+    v_thresh: 1.0       # Threshold voltage
+    v_reset: 0.0        # Reset voltage
+    dt: 1.0             # Time step (ms)
+    
+  # STDP Learning Parameters
+  stdp:
+    A_plus: 0.01        # LTP amplitude
+    A_minus: 0.01       # LTD amplitude
+    tau_plus: 20.0      # LTP time constant
+    tau_minus: 20.0     # LTD time constant
+    w_max: 1.0          # Maximum weight
+    w_min: 0.0          # Minimum weight
+    
+  # Architecture
+  architecture:
+    input_dim: 768
+    hidden_dims: [1024, 2048, 1024]
+    output_dim: 768
+    num_layers: 3
+    dropout: 0.1
+    
+# Memory Configuration (Hippocampus-like)
+memory:
+  # Short-term memory
+  stm:
+    capacity: 1000
+    decay_time: 300     # seconds
+    
+  # Long-term memory
+  ltm:
+    vector_store: "faiss"
+    embedding_dim: 768
+    max_capacity: 1000000
+    
+  # Episodic memory (hippocampus)
+  episodic:
+    pattern_completion_threshold: 0.85
+    consolidation_interval: 3600  # seconds
+    neurogenesis_rate: 0.01       # New neurons per cycle
+    
+  # Memory search
+  search:
+    top_k: 10
+    similarity_threshold: 0.7
+    temporal_weight: 0.3
+    semantic_weight: 0.7
+
+# Training Configuration
+training:
+  # Online learning
+  online:
+    batch_size: 1
+    learning_rate: 1e-4
+    update_interval: 100  # ms
+    
+  # Offline training
+  offline:
+    epochs: 10
+    batch_size: 32
+    learning_rate: 5e-5
+    warmup_steps: 1000
+    save_steps: 500
+    eval_steps: 500
+    gradient_accumulation_steps: 4
+    max_grad_norm: 1.0
+    
+  # Multi-threaded training
+  multi_thread:
+    num_workers: 8
+    prefetch_factor: 2
+    
+# Inference Configuration
+inference:
+  max_new_tokens: 512
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 50
+  repetition_penalty: 1.1
+  streaming: true
+  refresh_rate: 60  # Hz
+  
+# Multimodal Configuration
+multimodal:
+  enable_vision: true
+  enable_audio: true
+  enable_text: true
+  
+  vision:
+    image_size: 224
+    patch_size: 16
+    num_frames: 8
+    
+  audio:
+    sample_rate: 16000
+    n_mels: 80
+    hop_length: 512
+
+# Tool Configuration
+tools:
+  wikipedia:
+    enabled: true
+    language: "zh"
+    max_results: 5
+    
+  web_search:
+    enabled: true
+    engine: "duckduckgo"
+    max_results: 10
+    
+  calculator:
+    enabled: true
+    
+  code_interpreter:
+    enabled: true
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["*"]
+  max_request_size: 100  # MB
+  timeout: 300  # seconds
+
+# Web Interface
+web:
+  port: 8501
+  theme: "dark"
+  page_title: "Brain-Inspired AI"
+
+# Hardware Configuration
+hardware:
+  device: "auto"  # auto, cuda, cpu, mps
+  mixed_precision: true
+  compile_model: false
+  
+  # Memory optimization
+  gradient_checkpointing: true
+  flash_attention: true
+
+# Logging
+logging:
+  level: "INFO"
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
+  file: "logs/brain_ai.log"
+  rotation: "10 MB"
