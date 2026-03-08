@@ -1,0 +1,98 @@
+# Docker Compose for Brain-Inspired AI
+# 类脑人工智能Docker Compose配置
+
+version: '3.8'
+
+services:
+  # API Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    container_name: brain-ai-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./weights:/app/weights
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - brain-ai-network
+
+  # Web Interface
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    container_name: brain-ai-web
+    command: ["python", "main.py", "web"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./weights:/app/weights
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - brain-ai-network
+
+  # Redis (for caching)
+  redis:
+    image: redis:7-alpine
+    container_name: brain-ai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - brain-ai-network
+
+  # Optional: Jupyter Notebook
+  notebook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: brain-ai-notebook
+    command: >
+      bash -c "pip install jupyter jupyterlab &&
+               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root"
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./:/app
+      - ./notebooks:/app/notebooks
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - notebook
+    networks:
+      - brain-ai-network
+
+volumes:
+  redis-data:
+
+networks:
+  brain-ai-network:
+    driver: bridge
